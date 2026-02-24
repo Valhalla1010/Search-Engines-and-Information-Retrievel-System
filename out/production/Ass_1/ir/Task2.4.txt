@@ -1,0 +1,58 @@
+// graduate program mathematics
+1   Wilfred.f               1
+1   Yeni.f                  0
+1   Western_Institute_for_Food_Safety_and_Security.f    0
+1   YuanNiu.f               1
+1   YS.f                    0
+1   _South_Asia_Studies.f   0
+1   WIC_Program.f           0
+1   West_Davis_Elementary.f 0
+1   ZakirKhan.f             0
+1   Zinfandel_Lounge.f      1
+1   watson.f                2
+1   Weeder_Classes.f        2
+1   Yolo_Property_Management.f                          1
+1   Weight_No_More.f        0
+1   Yolo-Solano_Air_Quality_Management_District.f       0
+1   Welker_Law_Offices.f    0
+1   ZeldaKPotsdam.f         1
+1   Yolo_Regional_Occupational_Program.f                0
+1   VanessaSorkin.f         0
+1   VinhBoy.f               0
+1   Whole_Earth_Festival_2010.f                         0
+1   Wayne_Rosing.f          2
+1   Yolo_County_Smoke-Free_Apartments_Project.f         0
+1   Whole_Earth_REusables_Cooperative.f                 0
+1   Vegetable_Crops.f       0
+1   Yolo_Energy_Efficiency_Project.f                    0
+1   Wickson_Hall.f          1
+1   Watermelon_Music.f      0
+1   Yolo_Berry_Yogurt.f     0
+1   Yolo_Canine_Academy_%26_29_Palms_Pet_Resort.f       0
+1   Viking_Apartments.f     0
+1   Winter_2009_ASUCD_Election.f                        0
+1   Where_Can_I_....f       0
+1   Vita_Dolce_Salon_and_Barbershop.f                   0
+1   Village_Bakery.f                                    0
+1   Yolo_County_Library_-_Mary_L._Stephens_Branch.f     0
+1   Varsity_Theater.f                                   0
+1   Whole_Foods_Market.f    0
+1   West_Village.f          0
+1   Whole_Earth_Festival.f  0
+1   Yolo_County_Animal_Shelter.f                        0
+1   Yolo_County_Red_Cross.f                             0
+1   Videogaming.f           0
+1   WiFi_Hotspots.f         0
+1   Wiki_Style_Guide.f      0
+1   Wells_Fargo.f           0
+1   Yolo_County_Central_Landfill.f                      0
+1   Wiki_Promotion.f        0
+1   Wild_Campus.f           0
+1   Voorhies_Hall.f         0
+
+
+Highest ranked precision: 0.350
+Highest ranked recall: 0.090
+Trend: Precision usually decreases as k increases; Recall increases as k increases.
+Ranked retrieval generally gives higher precision than unranked retrieval at small k values.
+Recall increases with k and is proportional to the number of relevant documents retrieved.
