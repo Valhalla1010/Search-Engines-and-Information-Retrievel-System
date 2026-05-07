@@ -73,8 +73,9 @@ public class PostingsList {
      * */
     public void add(PostingsEntry entry) {
         for (PostingsEntry e : list){
+            // avoid duplicate documents
             if(e.docID == entry.docID){
-                return; // avoid duplicate documents
+                return;
             }
         }
         list.add(entry);

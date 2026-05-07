@@ -34,6 +34,7 @@ public class PageRank {
      *
      *   If there are no outlinks from i, then the value corresponding 
      *   key i is null.
+	 *   ex: p_1 = [2, 3, 4]
      */
     HashMap<Integer,HashMap<Integer,Boolean>> link = new HashMap<Integer,HashMap<Integer,Boolean>>();
 
@@ -46,14 +47,13 @@ public class PageRank {
      *   The probability that the surfer will be bored, stop
      *   following links, and take a random jump somewhere.
      */
-    final static double BORED = 0.15;  // standard power iteration method with bored factor of 0.15
+    final static double BORED = 0.15;
 
     /**
      *   Convergence criterion: Transition probabilities do not 
      *   change more that EPSILON from one iteration to another.
      */
-	// the algorithm converged after a limited number of iterations and
-	// completed within one minute, using 1GB of memory.
+
     final static double EPSILON = 0.0001;
 
        
@@ -62,7 +62,7 @@ public class PageRank {
 
     public PageRank( String filename ) {
 	int noOfDocs = readDocs( filename );  // read link graph
-	iterate( noOfDocs, 1000 ); // compute PageRank
+	iterate( noOfDocs, 1000 ); // start power iteration
     }
 
 
@@ -71,48 +71,60 @@ public class PageRank {
 
     /**
      *   Reads the documents and fills the data structures. 
-     *
+     *	each line in the file has format: 1; 2, 3, 4
+	 * this means page 1 links to page 2, 3, 4
      *   @return the number of documents read.
      */
     int readDocs( String filename ) {
-	int fileIndex = 0;
+	int fileIndex = 0; // keeps track of number of documents
 	try {
 	    System.err.print( "Reading file... " );
 	    BufferedReader in = new BufferedReader( new FileReader( filename ));
 	    String line;
 	    while ((line = in.readLine()) != null && fileIndex<MAX_NUMBER_OF_DOCS ) {
+		// find position of the semicolon
 		int index = line.indexOf( ";" );
+		// extract the document title
 		String title = line.substring( 0, index );
+		// check if document already exists
 		Integer fromdoc = docNumber.get( title );
-		//  Have we seen this document before?
+		// if document is new
 		if ( fromdoc == null ) {	
-		    // This is a previously unseen doc, so add it to the table.
+		    // assign a new doc ID
 		    fromdoc = fileIndex++;
+			// store mapping title to ID
 		    docNumber.put( title, fromdoc );
+			// store mapping ID to title
 		    docName[fromdoc] = title;
 		}
-		// Check all outlinks.
+		//parse all outgoing links from document
 		StringTokenizer tok = new StringTokenizer( line.substring(index+1), "," );
+		// process each linked document
 		while ( tok.hasMoreTokens() && fileIndex<MAX_NUMBER_OF_DOCS ) {
 		    String otherTitle = tok.nextToken();
+			// check if the linked doc already exists
 		    Integer otherDoc = docNumber.get( otherTitle );
+			// if other doc ID is new
 		    if ( otherDoc == null ) {
-			// This is a previousy unseen doc, so add it to the table.
+			// create a new ID for unseen doc
 			otherDoc = fileIndex++;
 			docNumber.put( otherTitle, otherDoc );
 			docName[otherDoc] = otherTitle;
 		    }
-		    // Set the probability to 0 for now, to indicate that there is
-		    // a link from fromdoc to otherDoc.
+
+		    // If not already created, create link
 		    if ( link.get(fromdoc) == null ) {
 			link.put(fromdoc, new HashMap<Integer,Boolean>());
 		    }
+			// add the outgoing link
 		    if ( link.get(fromdoc).get(otherDoc) == null ) {
 			link.get(fromdoc).put( otherDoc, true );
+			// outlink count
 			out[fromdoc]++;
 		    }
 		}
 	    }
+		// check if memory limit reached
 	    if ( fileIndex >= MAX_NUMBER_OF_DOCS ) {
 		System.err.print( "stopped reading since documents table is full. " );
 	    }
@@ -127,7 +139,7 @@ public class PageRank {
 	    System.err.println( "Error reading file " + filename );
 	}
 	System.err.println( "Read " + fileIndex + " number of documents" );
-	return fileIndex;
+	return fileIndex; // total number of doc
     }
 
 
@@ -137,43 +149,50 @@ public class PageRank {
     /*
      *   Chooses a probability vector a, and repeatedly computes
      *   aP, aP^2, aP^3... until aP^i = aP^(i+1).
-     *
+     *	power iteration algorithm
+     * repeatedly multiplies the probability vector with the transition matrix
+     * until the value converge
      */
     void iterate( int numberOfDocs, int maxIterations ) {
 		// YOUR CODE HERE
-		// PageRank vector for each document
+		// PageRank values of document
 		double[] pagerank = new double[numberOfDocs];
-		// temporary vector to store PageRank value for the next iteration
+		//array for storing new pageRank values
 		double[] newPagerank = new double[numberOfDocs];
 
-		// initialize uniformly:
+		// iterate PageRank uniformly
 		for (int i = 0; i < numberOfDocs; i++){
-			// each document gets 1/N probability
+			// gets 1/N probability
 			pagerank[i] = 1.0 / numberOfDocs;
 		}
-		// power iteration
+		// main power iteration
 		for (int iter = 0; iter < maxIterations; iter++){
-			// reset new PageRank values before computing next iteration
+			// reset next iteration
 			Arrays.fill(newPagerank, 0.0);
 
-			// distribute pageRank mass from each document
+			// iterate distribute pageRank from each doc
 			for(int i = 0; i < numberOfDocs; i++ ){
 				// if document has outgoing links
+				// it's pageRank is distributed equally among it's outlinks
 				if(out[i] > 0){
-					// divide pagerank equally among all outlinks
+					// share pagerank equally among outlinks
 					double share = pagerank[i] / out[i];
-					// get all documents that i links to
+					// get all linked doc
 					HashMap<Integer, Boolean> targets = link.get(i);
-					// distribute pagerank share to all linked documents
+					// check if the node has outgoing targets
 					if (targets != null){
+						// iterate each target node , linked page
 						for(Integer j : targets.keySet()){
+							// add PageRank contribution to the target node new pagerank
 							newPagerank[j] += share;
 						}
 					}
+					// if it's dangling node,
+					// it's pagerank is distributed uniformly to all page
 				}else {
-					// dangling node
-					// distribute pagerank uniformly to all document
+					// dangling node ,no outgoing links
 					double share  = pagerank[i] / numberOfDocs;
+					// distribute uniformly to all document
 					for(int j = 0; j < numberOfDocs; j++){
 						newPagerank[j] += share;
 					}
@@ -182,45 +201,53 @@ public class PageRank {
 			/**
 			 * PageRank - first attempt
 			 * PR(p) = sum(q E in(p)) PR(q) / L_q
-			 * p and q are pages
+			 * PR_p = the probability that the random surfer will be at page
+			 * p at any given point in time.
 			 * in(p) is the set of pages linking to p
-			 * L_q is the number of out-links from q
+			 * L_q is the number of outlinks from q
 			 * **/
-			// to here -> Power-iteretion step:  PR_new (j) = (sum(i->j) PR(i) / out(i))
-			// apply boredom factor and compute convergence difference
+			// compute convergence difference
 			double diff = 0.0;
+			// iterate distribute pageRank from each doc
 			for(int i = 0; i < numberOfDocs; i++){
-				// apply random jump probability:  PR = BORED / N + ( 1 - BORED) * PR (accumulated PageRank)
+				// apply damping factor(random jump), this represent probability that the surfer random jumps to other page
+				// BORED / numberOfDocs : probability that the random surfer jumps to any page.
+				// 1-BORED: probability 1 - C, the surfer is bored, "stop following links" and "restart" random page
+				// 1-BORED * newPageRank: probability of following links and keeping the accumulated rank.
 				newPagerank[i] = BORED / numberOfDocs + (1.0 - BORED) * newPagerank[i];
-				// accumulate total difference for convergence check
+				// compute change between iterations
 				diff += Math.abs(newPagerank[i] - pagerank[i]);
+				// This prevents rank sinks (page without links) and ensures convergence.
 			}
-			// update pageRank vector for nex iteration
+			// Convergence check, this is for stop iteration, compute the difference between new and old Pagerank
+			// update pageRank vector
 			pagerank = newPagerank.clone();
-			// stop iterations if pagerank value have converged
+			// if the diff < EPSILON, algorithm stop
 			if(diff < EPSILON){
 				System.err.println("Converged after " + iter + " iterations");
 				break;
-			}
+			}// this means the pagerank have converged.
 		}
 		printTop30(pagerank, numberOfDocs);
 		writePageRankToFile("pagerank.txt", pagerank, numberOfDocs);
 		writeTop30ToFile("pagerank_top30.txt", pagerank, numberOfDocs);
 
     }
-	// prints the top-30 documents ranked by pagerank
+	// prints the top 30 documents with highest pagerank score
 	void printTop30(double[] pagerank, int numberOfDocs) {
-		// create array of document indices
+		// create index to store document indices
 		Integer[] idx = new Integer[numberOfDocs];
+		// iterate pageRank from each doc
 		for (int i = 0; i < numberOfDocs; i++) {
 			idx[i] = i;
 		}
 
 		final double[] finalPagerank = pagerank;
-		// sort document indices by descending pagerank score
+		// sort document by PageRank descending
 		Arrays.sort(idx, new Comparator<Integer>() {
 			@Override
 			public int compare(Integer a, Integer b) {
+				// compare PageRank so that higher scores come first
 				return Double.compare(finalPagerank[b], finalPagerank[a]);
 			}
 		});
@@ -229,12 +256,15 @@ public class PageRank {
 		System.out.println("\nTop 30 PageRank pages:");
 		// print top 30 document.
 		for (int i = 0; i < 30 && i < numberOfDocs; i++) {
-			int doc = idx[i];
+			int doc = idx[i]; // get the doc index
 			System.out.printf(
+					// %d2 rank number with minimum width 2, used for (i + 1)
+					// %30s string, doc name with Minimum width 30
+					// %5d: show pagerank score with 5 decimal
 					"%2d. %30s %.5f\n",
-					i + 1,
+					i + 1, // ranking position
 					docName[doc],
-					pagerank[doc]
+					pagerank[doc] // score
 			);
 		}
 
@@ -243,7 +273,7 @@ public class PageRank {
 	// 2.5
 	/**
 	 * write pagerank values for all document to a file
-	 * each line: documentName pagerank score
+	 *
 	 * **/
 	void writePageRankToFile(String filename, double[] pagerank, int numberOfDocs){
 		// open file for writing with buffered writer
@@ -288,6 +318,7 @@ public class PageRank {
 
 
     public static void main( String[] args ) {
+		// check if filename argument provided
 	if ( args.length != 1 ) {
 	    System.err.println( "Please give the name of the link file" );
 	}

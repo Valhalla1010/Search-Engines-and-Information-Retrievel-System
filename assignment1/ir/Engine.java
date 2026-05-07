@@ -8,7 +8,9 @@
 package ir;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.io.File;
+
 
 /**
  *  This is the main class for the search engine.
@@ -26,14 +28,15 @@ public class Engine {
     /** The searcher used to search the index. */
     Searcher searcher;
     /** K-gram index */
-    KGramIndex kgIndex = null;
+    //KGramIndex kgIndex = null;
     // Assignment 3: Comment the line above and uncomment the next line
-    // KgramIndex kgIndex = new KGramIndex(2);
+    // create a K-gram index with k=2
+    KGramIndex kgIndex = new KGramIndex(2);
 
     /** Spell checker */
-    SpellChecker speller;
+    //SpellChecker speller;
     // Assignment 3: Comment the line above and uncomment the next line
-    // SpellChecker = new SpellChecker( index, kgIndex );
+    SpellChecker speller= new SpellChecker( index, kgIndex );
     
     /** The engine GUI. */
     SearchGUI gui;
@@ -80,7 +83,7 @@ public class Engine {
             synchronized ( indexLock ) {
                 gui.displayInfoText( "Indexing, please wait..." );
                 // task 2.5
-                index.loadPageRank("pagerank.txt");
+                //index.loadPageRank("pagerank.txt");
                 long startTime = System.currentTimeMillis();
                 for ( int i=0; i<dirNames.size(); i++ ) {
                     File dokDir = new File( dirNames.get( i ));
@@ -91,7 +94,19 @@ public class Engine {
 
                 index.cleanup();
 
+                //task 3.3 
+                
+                // get postings for bigram "ve"
+                List<KGramPostingsEntry> ve = kgIndex.getPostings("ve");
+                System.out.println("Number of words containing bigram 've': " + ve.size());
+                // get postings for bigrams "th" and "he"
+                List<KGramPostingsEntry> th = kgIndex.getPostings("th");
+                List<KGramPostingsEntry> he = kgIndex.getPostings("he");
+                // intersect the two posting lists to find words containing both bigrams
+                List<KGramPostingsEntry> both = kgIndex.intersect(th, he);
+                System.out.println("Number of words containing both 'th' and 'he': " + both.size());
             }
+            
         } else {
             gui.displayInfoText( "Index is loaded from disk" );
         }
@@ -104,7 +119,8 @@ public class Engine {
      *   Decodes the command line arguments.
      */
     private void decodeArgs( String[] args ) {
-        int i=0, j=0;
+        int i=0; 
+        int j=0;
         while ( i < args.length ) {
             if ( "-d".equals( args[i] )) {
                 i++;

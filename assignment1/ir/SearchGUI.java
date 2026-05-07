@@ -27,7 +27,7 @@ public class SearchGUI extends JFrame {
     /**  The query posed by the user. */
     private Query query;
 
-    /**  The results of a search query. */
+    /**  The results_before.txt of a search query. */
     private PostingsList results;
 
     /**  The query type (either intersection, phrase, or ranked). */
@@ -39,7 +39,7 @@ public class SearchGUI extends JFrame {
     /**  The type of normalization for tf-idf computation */
     NormalizationType normType = NormalizationType.NUMBER_OF_WORDS;
 
-    /**  Max number of results to display. */
+    /**  Max number of results_before.txt to display. */
     static final int MAX_RESULTS = 10;
 
     /** Demarkator between file name and file contents in the file contents text area*/
@@ -148,15 +148,16 @@ public class SearchGUI extends JFrame {
 
         /*
          *  Searches for documents matching the string in the search box, and displays
-         *  the first few results.
+         *  the first few results_before.txt.
          */
         Action search = new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
-                // Empty the results window
+                // Empty the results_before.txt window
                 displayInfoText( " " );
                 // Turn the search string into a Query
                 String queryString = queryWindow.getText().toLowerCase().trim();
                 query = new Query( queryString );
+
                 // Take relevance feedback from the user into account (assignment 3)
                 // Check which documents the user has marked as relevant.
                 if ( box != null ) {
@@ -167,7 +168,7 @@ public class SearchGUI extends JFrame {
                     }
                     query.relevanceFeedback( results, relevant, engine );
                 }
-                // Search and print results. Access to the index is synchronized since
+                // Search and print results_before.txt. Access to the index is synchronized since
                 // we don't want to search at the same time we're indexing new files
                 // (this might corrupt the index).
                 long startTime = System.currentTimeMillis();
@@ -175,10 +176,10 @@ public class SearchGUI extends JFrame {
                     results = engine.searcher.search( query, queryType, rankingType, normType );
                 }
                 long elapsedTime = System.currentTimeMillis() - startTime;
-                // Display the first few results + a button to see all results.
+                // Display the first few results_before.txt + a button to see all results_before.txt.
                 //
-                // We don't want to show all results directly since the displaying itself
-                // might take a long time, if there are many results.
+                // We don't want to show all results_before.txt directly since the displaying itself
+                // might take a long time, if there are many results_before.txt.
                 if ( results != null ) {
                     displayResults( MAX_RESULTS, elapsedTime/1000.0 );
                 } else {
@@ -280,7 +281,7 @@ public class SearchGUI extends JFrame {
    /* ----------------------------------------------- */
 
     /**
-     *  Clears the results window and writes an info text in it.
+     *  Clears the results_before.txt window and writes an info text in it.
      */
     void displayInfoText( String info ) {
         resultWindow.removeAll();
@@ -292,10 +293,10 @@ public class SearchGUI extends JFrame {
     }
 
     /**
-     *  Displays the results in the results window.
-     *  @param maxResultsToDisplay The results list is cut off after this many results
+     *  Displays the results_before.txt in the results_before.txt window.
+     *  @param maxResultsToDisplay The results_before.txt list is cut off after this many results_before.txt
      *      have been displayed.
-     *  @param elapsedTime Shows how long time it took to compute the results.
+     *  @param elapsedTime Shows how long time it took to compute the results_before.txt.
      */
     void displayResults( int maxResultsToDisplay, double elapsedTime ) {
         displayInfoText( String.format( "Found %d matching document(s) in %.3f seconds", results.size(), elapsedTime ));
@@ -371,13 +372,13 @@ public class SearchGUI extends JFrame {
 
             resultWindow.add( result );
         }
-        // If there were many results, give the user an option to see all of them.
+        // If there were many results_before.txt, give the user an option to see all of them.
         if ( i<results.size() ) {
             JPanel actionButtons = new JPanel();
             actionButtons.setLayout(new BoxLayout(actionButtons, BoxLayout.X_AXIS));
             actionButtons.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            JButton display10MoreBut = new JButton( "Display 10 more results" );
+            JButton display10MoreBut = new JButton( "Display 10 more results_before.txt" );
             display10MoreBut.setFont( resultFont );
             actionButtons.add( display10MoreBut );
             Action display10More = new AbstractAction() {
@@ -390,7 +391,7 @@ public class SearchGUI extends JFrame {
 
             actionButtons.add(Box.createRigidArea(new Dimension(5,0)));
 
-            JButton displayAllBut = new JButton( "Display all " + results.size() + " results" );
+            JButton displayAllBut = new JButton( "Display all " + results.size() + " results_before.txt" );
             displayAllBut.setFont( resultFont );
             actionButtons.add( displayAllBut );
             Action displayAll = new AbstractAction() {

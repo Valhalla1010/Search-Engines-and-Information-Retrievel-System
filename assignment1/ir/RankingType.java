@@ -8,7 +8,7 @@
 package ir;
 
 /**
- *  The different ways of ranking search results we are considering in
+ *  The different ways of ranking search results_before.txt we are considering in
  *  the course. 
  */
 public enum RankingType {

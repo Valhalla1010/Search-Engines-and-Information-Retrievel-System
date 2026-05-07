@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 
 /**
- *  Searches an index for results of a query.
+ *  Searches an index for results_before.txt of a query.
  */
 public class Searcher {
 
@@ -277,47 +277,58 @@ public class Searcher {
 
     /**
      * Ranked retrieval using TF-IDF scoring.
-     * This computes cosine similarity using:
+     * This computes cosine similarity between query and doc
      * cos(q,d) = q * d / |q| * |d|
      * q_i is the tf-idf weight of term i in the query
      * d_i is the tf-idf weight of term i in the document
-     * The final score is the sum over all query terms.
+     *
      * **/
     // Task 2.1 and 2.2
     private PostingsList rankedTFidf(Query query) {
-        int N = index.docLengths.size(); // number of documents
-        double[] scores = new double[N]; // accumulator for document scores
-        // for loop over all query terms
+        // get total number of docs
+        int N = index.docLengths.size();
+        double[] scores = new double[N]; // accumulate scores for each document
+        // iterate for each term in the query
         for (QueryTerm qt : query.queryterm) {
-            // get postings for the query term
+            // get postings list for the query term
             PostingsList postings = index.getPostings(qt.term);
-            // if the term does not exist in the index, skip it.
+            // if the term doesn't exist in the index, skip it.
             if (postings == null) continue;
-            // idf = ln( N / df)     df = documents in the corpus which contain t(query).
-            // document frequency (df)
+            // log(N/df)
             // compute inverse document frequency
-            double idf = Math.log((double) N / postings.size()); // idf (inverse document frequency) of t(query)
-            // for documents containing the query (term)
+            double idf = Math.log((double) N / postings.size());
+            // iterate through all documents containing this term
             for (PostingsEntry pe : postings.list) {
+                // get doc ID
                 int docID = pe.docID;
-                // term frequency
-                int tf = pe.positions.size();  // number occurrences of t(query) in d(document)
-                // normalize by document length
-                int len = index.docLengths.get(docID);   // words in d
-                // cosine similarity
-                scores[docID] += (tf * idf) / len; // score_dt = tf_dt * idf_t / len_d -> d(document), t(query term)
+                // compute term frequency
+                int tf = pe.positions.size();
+                // get doc length ,number of words in doc
+                int len = index.docLengths.get(docID);
+                // Add TF-IDF contribution to the doc score
+                // tf-idf normalized by doc length
+                /*scores[docID] += (tf * idf) / len;*/ // score_dt = tf_dt * idf_t / len_d -> d(document), t(query term)
+                
+                // normalize term frequency 
+                double tf_norm = (double) tf / len;
+                // include query term weight
+                scores[docID] += qt.weight * tf_norm * idf;
             }
         }
-        // build result list (one entry per document)
+        // create a result posting list
         PostingsList result = new PostingsList();
+        // iterate all docs
         for (int docID = 0; docID < N; docID++) {
+            // only include doc with positive score
             if (scores[docID] > 0) {
+                // create a new entry for the doc
                 PostingsEntry e = new PostingsEntry(docID);
-                e.score = scores[docID];   // assign score
+                // assign computed TF-IDF score.
+                e.score = scores[docID];
                 result.add(e);
             }
         }
-        // Sort documents by descending score
+        // Sort by descending score
         result.sort();
         return result;
     }
@@ -325,42 +336,41 @@ public class Searcher {
     //Task 2.5
     /**
      * Ranked retrieval using only PageRank scores
-     * Each document is scored using its precomputed PageRank value.
+     * Each document score is its precomputed PageRank.
      * **/
     private PostingsList rankedPageRank(Query query) {
         int N = index.docLengths.size(); // number of documents
-        // keeps track of which documents have already been added
-        // and this prevents the same document from appearing multiple times
+        // boolean to mark doc already added
         boolean[] seen = new boolean[N];
-        double[] scores = new double[N]; // scores from document
-        // for loop over all query terms
+        // pagerank scores for doc
+        double[] scores = new double[N];
+        // iterate through query term
         for (QueryTerm qt : query.queryterm) {
             // get postings list
             PostingsList postings = index.getPostings(qt.term);
-            // if the term does not exist in the index, skip it.
+            // if term doesn't exist, skip it,
             if (postings == null) continue;
-            // all documents containing this query term
+            // iterate through doc containing the term
             for (PostingsEntry pe : postings.list) {
                 int docID = pe.docID;
-                // if this document has not yet been processed
+                // if document not processed yet
                 if (!seen[docID]) {
-                    // retrieve the PageRank score for this document
-                    // and PageRank values are precomputed and stored in the index
+                    // retrieve pagerank score from index
                     scores[docID] = ((HashedIndex)index).pagerank.getOrDefault(docID, 0.0);
-                    // mark the document as seen so it's not added again
+                    // mark the document as processed
                     seen[docID] = true;
                 }
             }
         }
-        //result posting list
+        //create result list
         PostingsList result = new PostingsList();
-        // all documents
+        // iterate all documents
         for (int docID = 0; docID < N; docID++) {
-            // only add documents that appeared in at least one posting list
+            // only add doc that matched the query
             if (seen[docID]) {
-                // new postings for the document
+                // create new entry
                 PostingsEntry e = new PostingsEntry(docID);
-                // assign the PageRank score to the entry
+                // assign the PageRank score
                 e.score = scores[docID];
                 result.add(e);
             }
@@ -374,42 +384,48 @@ public class Searcher {
      * combination ranking using TF-IDF and PageRank
      * final score is
      * alpha * TF-IDF + beta * PageRank.
-     * allow weighting between two scores
+     *
      * **/
     private PostingsList rankedCombination(Query query) {
+        // total number of doc
         int N = index.docLengths.size();
-        double[] tfidf = new double[N];  // array to accumulate TF-IDF score for each document
+        // array to accumulate TF-IDF scores
+        double[] tfidf = new double[N];
+        // compute TF-IDF scores first
         for (QueryTerm qt : query.queryterm) {
+            // retrieve postings list for the term
             PostingsList postings = index.getPostings(qt.term);
+            // if term doesn't exist, skip it.
             if (postings == null) continue;
             // compute inverse document frequency
             double idf = Math.log((double) N / postings.size());
-            // all documents containing the term
+            // iterate through doc containing the term
             for (PostingsEntry pe : postings.list) {
                 int docID = pe.docID;
                 // compute term frequency
                 int tf = pe.positions.size();
-                // add normalized TF-IDF score to accumulator
+                // Add TF-IDF contribution to the doc score
+                // tf-idf normalized by doc length
                 tfidf[docID] += (tf * idf) / index.docLengths.get(docID);
             }
         }
-        // find the maximum PageRank value for normalization
+        // find maximum PageRank ,used for normalization
         double maxPR = Collections.max(((HashedIndex)index).pagerank.values());
         // weight for TF-IDF component
         double alpha = 0.7;
         // Weight for PageRank component
         double beta = 0.3;
-        // result postings list
+        // create result
         PostingsList result = new PostingsList();
-        // all document
+        // iterate through all doc
         for (int docID = 0; docID < N; docID++) {
-            // only include documents that have a TF-IDF score
+            // only include documents that matched query terms
             if (tfidf[docID] > 0) {
-                // normalize PageRank value to [0,1]
+                // normalize PageRank score to range[0,1]
                 double pr = ((HashedIndex)index).pagerank.getOrDefault(docID, 0.0) / maxPR;
-                // new postings for the document
+                // create new entry
                 PostingsEntry e = new PostingsEntry(docID);
-                // combine TF-IDF and PageRank into a single score
+                // combine TF-IDF and PageRank scores
                 e.score = alpha * tfidf[docID] + beta * pr;
                 result.add(e);
             }

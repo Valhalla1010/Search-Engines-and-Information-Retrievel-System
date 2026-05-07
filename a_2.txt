@@ -1,0 +1,44 @@
+
+Analysis / Answers:
+Highest ranked precision: 0.350
+Highest ranked recall: 0.090
+Trend: Precision usually decreases as k increases; Recall increases as k increases.
+Ranked retrieval generally gives higher precision than unranked retrieval at small k values.
+Recall increases with k and is proportional to the number of relevant documents retrieved.
+
+
+
+
+
+task 2.5 
+javac pagerank/PageRank.java
+
+java -Xmx1g pagerank. PageRank pagerank/linksDavis.txt
+
+
+Pages with very low PageRank are typically pages with few or no incoming links, such as personal user pages or isolated topics. This behavior is expected from the PageRank algorithm.
+
+
+We computed PageRank for the DavisWiki graph using the standard power iteration method with a boredom factor of 0.15.
+The algorithm converged after a limited number of iterations and completed within one minute, using well below 1GB of memory.
+
+The top 30 ranked pages largely overlap with those provided in davis_top_30.txt.
+Minor differences in ordering are expected due to implementation details and floating-point precision.
+
+Highly ranked pages such as Main_Page and UC_Davis act as central hubs with many incoming links, which explains their high PageRank values.
+In contrast, pages with low PageRank are typically less connected and only referenced by a small number of other pages.
+Overall, the ranking appears reasonable and consistent with the structure of the DavisWiki.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

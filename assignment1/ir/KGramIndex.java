@@ -49,28 +49,120 @@ public class KGramIndex {
 
     /**
      *  Get intersection of two postings lists
+     * the intersect function is used to combine postings
+     * lists when processing multi k-gram queries. 
+     * for example, if we want to search for the term "cat" and we have a k-gram index with k=2,
+     *  we will search for the k-grams "ca" and "at".
+     * Task 3.3
      */
-    private List<KGramPostingsEntry> intersect(List<KGramPostingsEntry> p1, List<KGramPostingsEntry> p2) {
+    public List<KGramPostingsEntry> intersect(List<KGramPostingsEntry> p1, List<KGramPostingsEntry> p2) {
         // 
         // YOUR CODE HERE
-        //
-        return null;
+
+
+        // create a list to store the result of the intersection
+        List<KGramPostingsEntry> result = new ArrayList<>();
+        //both lists
+        int i = 0, j = 0;
+        // iterate both lists still have elements
+        while (i < p1.size() && j < p2.size()){
+            // get the term IDs from both postings
+            int id1 = p1.get(i).tokenID;
+            int id2 = p2.get(j).tokenID;
+            // if both term IDs are the same
+            if(id1 == id2){
+                // add term ID to the result list
+                result.add(p1.get(i));
+                // move both pointers to the next element
+                i++;
+                j++;
+            // if term ID from p1 is smaller,     
+            } else if (id1 < id2) {
+                //move pointer 
+                i++;
+            // if term ID from p2 is smaller, move pointer j
+            }else {
+                j++;
+            }
+        }
+        
+        return result;
     }
 
 
-    /** Inserts all k-grams from a token into the index. */
+    /** Inserts all k-grams from a token into the index.
+     * 
+     * The insert fucntion extracts all k-grams from each token
+     * and stores them in an index.
+     * each k-gram maps to list of token IDs.
+     * task 3.3 
+     */
     public void insert( String token ) {
         //
         // YOUR CODE HERE
         //
+        // if token is new, assign a new unique ID
+        if (!term2id.containsKey(token)){
+            int termID = generateTermID(); // Generate new term ID
+            term2id.put(token, termID); // Store the mapping from term to ID
+            id2term.put(termID, token); // Store the mapping from ID to term
+        }
+        // get the token ID
+        int termID = term2id.get(token);
+
+        // 
+        String modToken = "^" + token + "$";
+
+        // Extract all k-grams
+        for (int i = 0; i < modToken.length() - K + 1; i++){
+            // extract substring of length K
+            String kgram = modToken.substring(i, i + K);
+            // get posting list for this k-gram
+            List<KGramPostingsEntry> posting = index.get(kgram);
+            // if k-grams not in index
+            if(posting == null) {
+                // create new posting list
+                posting = new ArrayList<>();
+                // add new posting to the index
+                index.put(kgram, posting);
+            }
+
+            // Avoid duplicates
+            boolean exists = false;
+            // check if termID already exists in the posting
+            for(KGramPostingsEntry entry : posting){
+                // if tokenID already exists, skip adding it again
+                if(entry.tokenID == termID){
+                    // mark as existing and break out of the loop
+                    exists = true;
+                    break;
+                }
+            } // if termID is not already in the posting, add it
+            if(!exists){
+                posting.add(new KGramPostingsEntry(termID));
+            
+            }
+
+        }
     }
 
-    /** Get postings for the given k-gram */
+    /** Get postings for the given k-gram 
+     * The getPostings function retrieves the list of
+     * tokens containings a given k-gram. 
+     * task 3.3 
+    */
     public List<KGramPostingsEntry> getPostings(String kgram) {
         //
         // YOUR CODE HERE
         //
-        return null;
+        // Retrieve posting list for given k-gram
+        List<KGramPostingsEntry> posting = index.get(kgram);
+        // if no posting exist(or not found), return empty list, aviod null
+        if(posting == null){
+            return new ArrayList<>();
+        }
+        // list
+        return posting;
     }
 
     /** Get id of a term */
